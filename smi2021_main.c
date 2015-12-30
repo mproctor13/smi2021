@@ -1251,8 +1251,13 @@ static int smi2021_usb_probe(struct usb_interface *intf,
 	/* NTSC is default */
 	smi2021->cur_norm = V4L2_STD_NTSC;
 	smi2021->cur_height = SMI2021_NTSC_LINES;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 14, 0)
 	v4l2_subdev_call(smi2021->gm7113c_subdev, video, s_std,
 			smi2021->cur_norm);
+#else
+	v4l2_subdev_call(smi2021->gm7113c_subdev, core, s_std,
+			smi2021->cur_norm);
+#endif
 	v4l2_subdev_call(smi2021->gm7113c_subdev, video, s_routing,
 			smi2021->vid_inputs[smi2021->cur_input].type, 0, 0);
 

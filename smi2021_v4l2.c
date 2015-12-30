@@ -134,8 +134,13 @@ static int vidioc_s_std(struct file *file, void *priv, v4l2_std_id norm)
 	else
 		return -EINVAL;
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 14, 0)
 	v4l2_subdev_call(smi2021->gm7113c_subdev, video, s_std,
 			smi2021->cur_norm);
+#else
+	v4l2_subdev_call(smi2021->gm7113c_subdev, core, s_std,
+			smi2021->cur_norm);
+#endif
 
 	return 0;
 }
@@ -244,11 +249,22 @@ static int start_streaming(struct vb2_queue *vq, unsigned int count)
 	return smi2021_start(smi2021);
 }
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 14, 0)
 static void stop_streaming(struct vb2_queue *vq)
 {
 	struct smi2021 *smi2021 = vb2_get_drv_priv(vq);
 	smi2021_stop(smi2021);
 }
+#else
+static int stop_streaming(struct vb2_queue *vq)
+{
+	struct smi2021 *smi2021 = vb2_get_drv_priv(vq);
+	if (smi2021->udev == NULL)
+		return -ENODEV;
+	smi2021_stop(smi2021);
+	return 0;
+}
+#endif
 
 static struct vb2_ops smi2021_video_qops = {
 	.queue_setup		= queue_setup,
@@ -312,7 +328,11 @@ int smi2021_vb2_setup(struct smi2021 *smi2021)
 	q->buf_struct_size = sizeof(struct smi2021_buf);
 	q->ops = &smi2021_video_qops;
 	q->mem_ops = &vb2_vmalloc_memops;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 14, 0)
 	q->timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+#else
+	q->timestamp_type = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+#endif
 
 	rc = vb2_queue_init(q);
 	if (rc < 0)

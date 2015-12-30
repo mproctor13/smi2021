@@ -189,8 +189,13 @@ int smi2021_bootloader_probe(struct usb_interface *intf,
 
 		dev_info(&udev->dev, "Looking for: %s\n", hw_versions[i].name);
 
-		rc = request_firmware_direct(&firmware,	hw_versions[i].name,
-								&udev->dev);
+#if LINUX_VERSION_CODE > KERNEL_VERSION(3, 14, 0)
+		rc = request_firmware_direct(&firmware, hw_versions[i].name, 
+							&udev->dev);
+#else
+		rc = request_firmware(&firmware, hw_versions[i].name,
+							&udev->dev);
+#endif
 
 		if (rc == 0) {
 			dev_info(&udev->dev, "Found firmware for 0x00%x\n",
