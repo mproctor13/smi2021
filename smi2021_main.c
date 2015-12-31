@@ -1105,12 +1105,12 @@ static int smi2021_usb_probe(struct usb_interface *intf,
 
 	switch (udev->descriptor.idProduct) {
 	case 0x3e:
-	case 0x3f:
 		input_count = ARRAY_SIZE(quad_input);
 		vid_inputs = quad_input;
 		break;
 	case 0x3c:
 	case 0x3d:
+	case 0x3f:
 	default:
 		input_count = ARRAY_SIZE(dual_input);
 		vid_inputs = dual_input;
